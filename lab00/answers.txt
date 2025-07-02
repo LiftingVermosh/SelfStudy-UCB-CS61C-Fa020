@@ -1,0 +1,4 @@
+1. `grep`
+2. `ps` for linux and `tasklist` for windows
+3. `pkill` for linux and `taskkill` for windows
+4. `diff` in linux
