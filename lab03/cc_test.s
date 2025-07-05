@@ -55,7 +55,8 @@ main:
 # FIXME Fix the reported error in this function (you can delete lines
 # if necessary, as long as the function still returns 1 in a0).
 simple_fn:
-    mv a0, t0
+    # The next line is commented out here to fix the CC error
+    # mv a0, t0
     li a0, 1
     ret
 
@@ -76,7 +77,13 @@ simple_fn:
 # missing. Another hint: what does the "s" in "s0" stand for?
 naive_pow:
     # BEGIN PROLOGUE
+    # Using reg s0 without saving it is a CC violation,
+    # So we need to save it on the stack.
     # END PROLOGUE
+    # FIXME Add code to save the value of s0 on the stack
+    addi sp, sp, -4
+    sw s0, 0(sp)
+    # Now we can use s0 to store the result
     li s0, 1
 naive_pow_loop:
     beq a1, zero, naive_pow_end
@@ -86,7 +93,11 @@ naive_pow_loop:
 naive_pow_end:
     mv a0, s0
     # BEGIN EPILOGUE
+    # FIXME Add code to restore the value of s0 from the stack
     # END EPILOGUE
+    lw s0, 0(sp)
+    addi sp, sp, 4
+    # Now we can return the result in a0
     ret
 
 # Increments the elements of an array in-place.
@@ -97,11 +108,20 @@ naive_pow_end:
 # address as argument and increments the 32-bit value stored there.
 inc_arr:
     # BEGIN PROLOGUE
-    #
     # FIXME What other registers need to be saved?
-    #
-    addi sp, sp, -4
+    # Using s0, s1 without saving them is a CC violation,
+    # so we need to save them on the stack.
+    # We also need to save ra, since we will call helper_fn
+    # Normaliy say, t series registers (t0, t1) don't need to be saved
+    # because they are temporary registers and can be overwritten
+    # by the function.
+    # but here we need to preserve t0 because we use it
+    # as a counter in the loop.
+    # in other words, t0 is used across function calls
+    addi sp, sp, -12
     sw ra, 0(sp)
+    sw s0, 4(sp) # Save s0
+    sw s1, 8(sp) # Save s1
     # END PROLOGUE
     mv s0, a0 # Copy start of array to saved register
     mv s1, a1 # Copy length of array to saved register
@@ -116,14 +136,20 @@ inc_arr_loop:
     # Hint: What does the "t" in "t0" stand for?
     # Also ask yourself this: why don't we need to preserve t1?
     #
+    addi sp sp -4
+    sw t0, 0(sp) # Save t0 on the stack
     jal helper_fn
+    lw t0, 0(sp) # Restore t0 from the stack
+    addi sp, sp, 4 
     # Finished call for helper_fn
     addi t0, t0, 1 # Increment counter
     j inc_arr_loop
 inc_arr_end:
     # BEGIN EPILOGUE
     lw ra, 0(sp)
-    addi sp, sp, 4
+    lw s0, 4(sp) # Restore s0
+    lw s1, 8(sp) # Restore s1
+    addi sp, sp, 12 # Restore stack pointer
     # END EPILOGUE
     ret
 
@@ -137,11 +163,18 @@ inc_arr_end:
 # as appropriate.
 helper_fn:
     # BEGIN PROLOGUE
+    # Using s0 without saving it is a CC violation,
+    # so we need to save it on the stack.
     # END PROLOGUE
+    addi sp, sp, -4
+    sw s0, 4(sp) # Save s0
     lw t1, 0(a0)
     addi s0, t1, 1
     sw s0, 0(a0)
     # BEGIN EPILOGUE
+    # Restore the saved registers
+    lw s0, 0(sp) # Restore s0
+    addi sp, sp, 4 # Restore stack pointer
     # END EPILOGUE
     ret
 
