@@ -15,12 +15,12 @@ main:
     jal create_default_list
     mv s0, a0   # v0 = s0 is head of node list
 
-    #print "lists before: "
+    # print "lists before: "
     la a1, start_msg
     li a0, 4
     ecall
 
-    #print the list
+    # print the list
     add a0, s0, x0
     jal print_list
 
@@ -69,7 +69,13 @@ mapLoop:
     add t1, s0, x0      # load the address of the array of current node into t1
     lw t2, 4(s0)        # load the size of the node's array into t2
 
-    add t1, t1, t0      # offset the array address by the count
+    # Original Code:
+    # add t1, t1, t0      # offset the array address by the count 
+    # 在 t0 为计数器的情况下，对 t1 进行偏移操作时似乎不应该使用 add
+    # FIXED HERE #
+    slli t3, t0, 2
+    add t1, t1, t3
+
     lw a0, 0(t1)        # load the value at that address into a0
 
     jalr s1             # call the function on that value.
@@ -78,8 +84,14 @@ mapLoop:
     addi t0, t0, 1      # increment the count
     bne t0, t2, mapLoop # repeat if we haven't reached the array size yet
 
-    la a0, 8(s0)        # load the address of the next node into a0
-    lw a1, 0(s1)        # put the address of the function back into a1 to prepare for the recursion
+    # Original Code:
+    # la a0, 8(s0)        # load the address of the next node into a0
+    # lw a1, 0(s1)        # put the address of the function back into a1 to prepare for the recursion
+    # la,lw 指向的是寄存器当前值作为地址的值
+    # a0 应该传入的是当前值, a1 传入的应该是函数地址
+    # FIXED HERE #
+    lw a0 8(s0)
+    mv a1 0(s1)
 
     jal  map            # recurse
 done:
@@ -89,7 +101,7 @@ done:
     addi sp, sp, 12
     jr ra
 
-mystery:
+mystery:                # a0 = a0*a0 + a0
     mul t1, a0, a0
     add a0, t1, a0
     jr ra
