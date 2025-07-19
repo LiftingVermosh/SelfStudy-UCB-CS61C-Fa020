@@ -76,9 +76,17 @@ main:
 # a1 is the address of the "output" array (defined above).
 # Think: why might having a1 be useful?
 f:
-    # YOUR CODE GOES HERE!
+    # FILLED HERE #
+    addi t0, a0, 3      # 1. 输入值+3 → 索引计算
+    li t1, 4            # 2. 设置字长因子（4字节）
+    mul t0, t0, t1      # 3. 索引×4 → 字节偏移
 
-    jr ra               # Always remember to jr ra after your function!
+    # [注]:上述两条可被优化(减少指令周期)为:
+    #   slli t0, t0, 2      # 左移2位替代乘法（×4）
+
+    add t0, a1, t0      # 4. 数组基址 + 偏移 → 元素地址
+    lw a0, 0(t0)        # 5. 加载数组元素值到返回值
+    jr ra               # 6. 返回结果
 
 print_int:
     mv a1, a0
