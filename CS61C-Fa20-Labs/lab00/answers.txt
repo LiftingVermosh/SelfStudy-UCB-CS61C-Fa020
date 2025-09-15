@@ -1,0 +1,17 @@
+1. 在文件系统中递归搜索关键字:
+   # 使用 grep 命令配合 -r(递归) 参数
+   grep -r "keyword" /path/to/search
+
+2. 显示当前运行的进程信息:
+   # 使用 ps 命令查看快照，或 top/htop 实时查看
+   ps aux       # 显示所有进程
+   top          # 动态显示进程
+
+3. 终止进程:
+   # 使用 kill 命令通过PID终止，或 pkill 通过名称终止
+   kill 1234          # 终止PID为1234的进程
+   pkill process_name # 终止指定名称的进程
+
+4. 比较两个文件的差异:
+   # 使用 diff 命令逐行比较
+   diff file1.txt file2.txt

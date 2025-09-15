@@ -1,0 +1,42 @@
+Scenario 1
+    1. Because Step Size in bytes is exactly equal to Block Size in bytes.
+    2. 0.0
+    3. Block Size, 16 
+
+Scenario 2
+    1. 32 times
+    2. MHHHMHHH
+    3. 0.75
+
+Scenario 3
+    1.
+    2.
+    3.
+    4.
+    5.
+
+--- lines below are ignored by the AG ---
+
+Checkoff Question 1: 对于当前参数
+- 缓存级别：1(一级缓存)
+- 块大小(block size)：8字节
+- 块数量(number of blocks)：4
+- 关联性(associativity)：1(直接映射)
+- 缓存大小(cache size)：32字节(符合块大小 × 块数量 = 8 × 4)
+- 数组大小(a0)：128字节
+- 步长(a1)：8字节(但程序数组为 int 型,一次 4 bit，步长被乘以 4，因此实际步长为 32 字节)
+- 重复次数(a2)：6
+- 选项(a3)：0(只写操作，每次迭代执行一次存储指令sw)
+而言，index = (address / 8) % 4,因此，所有四个地址都映射到同一个缓存索引(即同一个缓存块)。然而，这些地址的标签(tag)不同，因为它们是不同的内存块。当循环重复时(共6次)，每次访问都遇到相同的索引冲突，每次都需要从主存加载数据，导致所有访问都是未命中。因此，命中率为0
+Checkoff Question 2: Block Size | Step Size 1 (In a word,We should make Step forward size less than or equal to Block Size)
+Checkoff Question 3:总访问次数：64次(32次读 + 32次写)。
+总不命中次数：16次(每个块首次访问时发生一次不命中)。
+总命中次数：64 - 16 = 48次。
+命中率：48 / 64 = 0.75。
+Checkoff Question 4:对于每个缓存块，访问序列为：
+1. 读第一个地址(例如地址0)→ 不命中(首次访问该块)，加载块到缓存中。
+2. 写第一个地址(例如地址0)→ 命中(块已在缓存中)。
+3. 读第二个地址(例如地址8)→ 命中(块已在缓存中)。
+4. 写第二个地址(例如地址8)→ 命中(块已在缓存中)。
+因此，每个块对应的4次访问中，有1次不命中和3次命中，命中率为75%
+Checkoff Question 5:

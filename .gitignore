@@ -1,3 +1,12 @@
+*.*
+
+!CS61C-Fa20-Labs/
+!CS61C-Fa20-Labs/**
+!CS61C-Fa20-Projects/
+!CS61C-Fa20-Projects/**
+!CS61C-Fa20-Slides/
+!CS61C-Fa20-Slides/**
+
 # Prerequisites
 *.d
 
@@ -252,3 +261,6 @@ $RECYCLE.BIN/
 # lab13 program
 server_basic server_process
 **/*._sobel.bmp
+
+# VScode
+.vscode/
