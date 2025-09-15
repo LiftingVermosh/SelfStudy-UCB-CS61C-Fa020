@@ -22,12 +22,36 @@
 Color *evaluateOnePixel(Image *image, int row, int col)
 {
 	//YOUR CODE HERE
+	Color base_Color = image->image[row][col];
+	Color *new_Color = malloc(sizeof(Color));
+	uint8_t LSB = base_Color.B & 1;   		// B Channel的最低位
+	// 根据LSB的值，设置R、G、B的值
+	new_Color->R = LSB * 255;
+	new_Color->G = LSB * 255;
+	new_Color->B = LSB * 255;
+	return new_Color;
 }
 
 //Given an image, creates a new image extracting the LSB of the B channel.
 Image *steganography(Image *image)
 {
 	//YOUR CODE HERE
+	uint32_t rows = image->rows;
+	uint32_t cols = image->cols;
+	Image *new_image = malloc(sizeof(Image));
+	new_image->rows = rows;
+	new_image->cols = cols;
+	new_image->image = malloc(rows * sizeof(Color*));
+	// 循环遍历确定当前位置的LSB值
+	for(int i = 0; i < rows; ++i){
+		new_image->image[i] = malloc(cols * sizeof(Color));
+		for(int j = 0; j < cols; ++j){
+			Color *new_Color = evaluateOnePixel(image, i, j);
+			new_image->image[i][j] = *new_Color;
+			free(new_Color);
+		}
+	}
+	return new_image;
 }
 
 /*
@@ -46,4 +70,22 @@ Make sure to free all memory before returning!
 int main(int argc, char **argv)
 {
 	//YOUR CODE HERE
+	if(argc != 2){
+		printf("错误：无效的命令行参数 %s \n", argv[0]);
+		return -1;
+	}
+	Image *image = readData(argv[1]);
+	if(image == NULL){
+		printf("错误：无法读取文件 %s\n", argv[1]);
+		return -1;
+	}
+	Image *new_image = steganography(image);
+	if(new_image == NULL){
+		printf("错误：无法创建新图像 \n");
+		return -1;
+	}
+	writeData(new_image);
+	freeImage(new_image);
+	freeImage(image);
+	return 0;
 }
