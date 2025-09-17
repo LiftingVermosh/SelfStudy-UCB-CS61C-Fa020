@@ -510,35 +510,209 @@ class TestMatmul(TestCase):
 
 class TestReadMatrix(TestCase):
 
-    def do_read_matrix(self, fail='', code=0):
+    def do_read_matrix(self, filename, expected_rows, expected_cols, expected_data, fail='', code=0):
         t = AssemblyTest(self, "read_matrix.s")
+        
         # load address to the name of the input file into register a0
-        t.input_read_filename("a0", "inputs/test_read_matrix/test_input.bin")
+        t.input_read_filename("a0", filename)
 
         # allocate space to hold the rows and cols output parameters
         rows = t.array([-1])
         cols = t.array([-1])
 
         # load the addresses to the output parameters into the argument registers
-        raise NotImplementedError("TODO")
-        # TODO
+        t.input_array("a1", rows)  # pointer to rows output
+        t.input_array("a2", cols)  # pointer to cols output
 
         # call the read_matrix function
         t.call("read_matrix")
 
-        # check the output from the function
-        # TODO
+        if code == 0:
+            # check the output from the function
+            # Check that rows and cols were set correctly
+            t.check_array(rows, [expected_rows])
+            t.check_array(cols, [expected_cols])
+            
+            # Check that the returned matrix pointer contains the correct data
+            # The returned pointer should point to the matrix data (after the 8-byte header)
+            # We need to check the matrix elements
+            t.check_array_pointer("a0", expected_data)
 
         # generate assembly and run it through venus
         t.execute(fail=fail, code=code)
 
     def test_simple(self):
-        self.do_read_matrix()
+        # Test reading a simple 2x2 matrix
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_input.bin",
+            3, 3,  # expected rows and columns
+            [1, 2, 3, 4, 5, 6, 7, 8, 9]  # expected matrix data
+        )
+
+    def test_single_element(self):
+        # Test reading a 1x1 matrix
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_1x1.bin",
+            1, 1,  # expected rows and columns
+            [42]  # expected matrix data
+        )
+
+    def test_rectangular(self):
+        # Test reading a rectangular matrix (2x3)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_2x3.bin",
+            2, 3,  # expected rows and columns
+            [1, 2, 3, 4, 5, 6]  # expected matrix data
+        )
+
+    def test_large_matrix(self):
+        # Test reading a larger matrix (3x4)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_3x4.bin",
+            3, 4,  # expected rows and columns
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # expected matrix data
+        )
+
+    def test_negative_numbers(self):
+        # Test reading a matrix with negative numbers
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_negative.bin",
+            2, 2,  # expected rows and columns
+            [-1, -2, -3, -4]  # expected matrix data
+        )
+
+    def test_zero_matrix(self):
+        # Test reading a matrix with zeros
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_zeros.bin",
+            2, 2,  # expected rows and columns
+            [0, 0, 0, 0]  # expected matrix data
+        )
+
+    def test_max_values(self):
+        # Test reading a matrix with maximum and minimum integer values
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_max_values.bin",
+            2, 2,  # expected rows and columns
+            [2147483647, -2147483648, 2147483647, -2147483648]  # expected matrix data
+        )
+
+    def test_single_row(self):
+        # Test reading a single row matrix
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_single_row.bin",
+            1, 3,  # expected rows and columns
+            [1, 2, 3]  # expected matrix data
+        )
+
+    def test_single_column(self):
+        # Test reading a single column matrix
+        self.do_read_matrix(
+            "inputs/test_read_matrix/test_single_column.bin",
+            3, 1,  # expected rows and columns
+            [1, 2, 3]  # expected matrix data
+        )
+
+    def test_error_file_not_found(self):
+        # Test error case: file not found (fopen error)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/nonexistent.bin",
+            0, 0, [],  # dummy values
+            code=90  # expected error code for fopen error
+        )
+
+    def test_error_empty_file(self):
+        # Test error case: empty file (fread error for header)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/empty.bin",
+            0, 0, [],  # dummy values
+            code=91  # expected error code for fread error
+        )
+
+    def test_error_header_only(self):
+        # Test error case: file has only header but no data (fread error for matrix)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/header_only.bin",
+            0, 0, [],  # dummy values
+            code=91  # expected error code for fread error
+        )
+
+    def test_error_invalid_file_format(self):
+        # Test error case: invalid file format (too short for header)
+        self.do_read_matrix(
+            "inputs/test_read_matrix/invalid_header.bin",
+            0, 0, [],  # dummy values
+            code=91  # expected error code for fread error
+        )
+
+    def test_error_incomplete_data(self):
+        # Test error case: file has incomplete matrix data
+        self.do_read_matrix(
+            "inputs/test_read_matrix/incomplete_data.bin",
+            0, 0, [],  # dummy values
+            code=91  # expected error code for fread error
+        )
+
+    def test_error_malloc_failure_header(self):
+        # Test error case: malloc fails for header allocation
+        # We can simulate this by creating a very large allocation request
+        t = AssemblyTest(self, "read_matrix.s")
+        
+        # Create a filename that will trigger a very large malloc request
+        # We'll create a file with very large dimensions to force malloc failure
+        t.input_read_filename("a0", "inputs/test_read_matrix/large_dimensions.bin")
+        
+        # Allocate space for output parameters
+        rows = t.array([-1])
+        cols = t.array([-1])
+        
+        t.input_array("a1", rows)
+        t.input_array("a2", cols)
+        
+        t.call("read_matrix")
+        # This should trigger malloc failure and exit with code 88
+        t.execute(code=88)
+
+    def test_error_malloc_failure_matrix(self):
+        # Test error case: malloc fails for matrix allocation
+        # Similar to above, but we need to create a file with valid header
+        # but very large matrix size to trigger malloc failure
+        t = AssemblyTest(self, "read_matrix.s")
+        
+        t.input_read_filename("a0", "inputs/test_read_matrix/large_matrix.bin")
+        
+        rows = t.array([-1])
+        cols = t.array([-1])
+        
+        t.input_array("a1", rows)
+        t.input_array("a2", cols)
+        
+        t.call("read_matrix")
+        # This should trigger malloc failure and exit with code 88
+        t.execute(code=88)
+
+    def test_error_fclose_failure(self):
+        # Test error case: fclose fails
+        # This is difficult to test without mocking, but we can try to create
+        # a special file that might cause fclose to fail
+        # For now, we'll create a test that might trigger this path
+        t = AssemblyTest(self, "read_matrix.s")
+        
+        t.input_read_filename("a0", "inputs/test_read_matrix/fclose_error.bin")
+        
+        rows = t.array([-1])
+        cols = t.array([-1])
+        
+        t.input_array("a1", rows)
+        t.input_array("a2", cols)
+        
+        t.call("read_matrix")
+        # This might trigger fclose error and exit with code 92
+        t.execute(code=92)
 
     @classmethod
     def tearDownClass(cls):
         print_coverage("read_matrix.s", verbose=False)
-
 
 class TestWriteMatrix(TestCase):
 
