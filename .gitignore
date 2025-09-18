@@ -262,5 +262,8 @@ $RECYCLE.BIN/
 server_basic server_process
 **/*._sobel.bmp
 
+# bin
+*.bin
+
 # VScode
 .vscode/
